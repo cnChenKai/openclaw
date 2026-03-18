@@ -99,6 +99,7 @@ const PLATFORM_DEFAULTS: Record<string, string[]> = {
     ...REMINDERS_COMMANDS,
     ...PHOTOS_COMMANDS,
     ...MOTION_COMMANDS,
+    "sms.send",
   ],
   macos: [
     ...CANVAS_COMMANDS,
