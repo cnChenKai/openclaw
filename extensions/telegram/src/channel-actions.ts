@@ -4,6 +4,7 @@ import {
   readStringOrNumberParam,
   readStringParam,
 } from "openclaw/plugin-sdk/agent-runtime";
+import { handleTelegramAction } from "openclaw/plugin-sdk/agent-runtime";
 import { readBooleanParam } from "openclaw/plugin-sdk/boolean-param";
 import { resolveReactionMessageId } from "openclaw/plugin-sdk/channel-runtime";
 import {
@@ -26,7 +27,6 @@ import {
   listEnabledTelegramAccounts,
   resolveTelegramPollActionGateState,
 } from "./accounts.js";
-import { handleTelegramAction } from "./action-runtime.js";
 import { resolveTelegramInlineButtons } from "./button-types.js";
 import { isTelegramInlineButtonsEnabled } from "./inline-buttons.js";
 

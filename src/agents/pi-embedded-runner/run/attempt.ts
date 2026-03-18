@@ -1987,7 +1987,6 @@ export async function runEmbeddedAttempt(
         },
         params.thinkLevel,
         sessionAgentId,
-        effectiveWorkspace,
       );
 
       if (cacheTrace) {

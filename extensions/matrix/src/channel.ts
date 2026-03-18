@@ -8,7 +8,6 @@ import {
   collectAllowlistProviderGroupPolicyWarnings,
 } from "openclaw/plugin-sdk/channel-policy";
 import { createLazyRuntimeNamedExport } from "openclaw/plugin-sdk/lazy-runtime";
-import { buildTrafficStatusSummary } from "../../shared/channel-status-summary.js";
 import {
   buildChannelConfigSchema,
   buildProbeChannelStatusSummary,
@@ -16,7 +15,8 @@ import {
   DEFAULT_ACCOUNT_ID,
   PAIRING_APPROVED_MESSAGE,
   type ChannelPlugin,
-} from "../runtime-api.js";
+} from "openclaw/plugin-sdk/matrix";
+import { buildTrafficStatusSummary } from "../../shared/channel-status-summary.js";
 import { matrixMessageActions } from "./actions.js";
 import { MatrixConfigSchema } from "./config-schema.js";
 import {

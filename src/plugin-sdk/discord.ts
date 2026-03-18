@@ -5,7 +5,6 @@ export type {
 } from "../channels/plugins/types.js";
 export type { OpenClawConfig } from "../config/config.js";
 export type { DiscordAccountConfig, DiscordActionConfig } from "../config/types.js";
-export type { DiscordConfig } from "../config/types.discord.js";
 export type { DiscordPluralKitConfig } from "../../extensions/discord/api.js";
 export type { InspectedDiscordAccount } from "../../extensions/discord/api.js";
 export type { ResolvedDiscordAccount } from "../../extensions/discord/api.js";
@@ -57,7 +56,7 @@ export {
 export {
   resolveDiscordGroupRequireMention,
   resolveDiscordGroupToolPolicy,
-} from "../../extensions/discord/src/group-policy.js";
+} from "../channels/plugins/group-mentions.js";
 export { DiscordConfigSchema } from "../config/zod-schema.providers-core.js";
 
 export {

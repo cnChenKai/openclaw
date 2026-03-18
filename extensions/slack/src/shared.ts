@@ -3,7 +3,6 @@ import {
   createScopedAccountConfigAccessors,
   createScopedChannelConfigBase,
 } from "openclaw/plugin-sdk/channel-config-helpers";
-import { createChannelPluginBase } from "openclaw/plugin-sdk/core";
 import {
   formatDocsLink,
   hasConfiguredSecretInput,
@@ -177,7 +176,7 @@ export function createSlackPluginBase(params: {
   | "config"
   | "setup"
 > {
-  return createChannelPluginBase({
+  return {
     id: SLACK_CHANNEL,
     meta: {
       ...getChatChannelMeta(SLACK_CHANNEL),
@@ -221,17 +220,5 @@ export function createSlackPluginBase(params: {
       ...slackConfigAccessors,
     },
     setup: params.setup,
-  }) as Pick<
-    ChannelPlugin<ResolvedSlackAccount>,
-    | "id"
-    | "meta"
-    | "setupWizard"
-    | "capabilities"
-    | "agentPrompt"
-    | "streaming"
-    | "reload"
-    | "configSchema"
-    | "config"
-    | "setup"
-  >;
+  };
 }

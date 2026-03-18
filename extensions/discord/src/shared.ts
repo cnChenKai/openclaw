@@ -3,7 +3,6 @@ import {
   createScopedAccountConfigAccessors,
   createScopedChannelConfigBase,
 } from "openclaw/plugin-sdk/channel-config-helpers";
-import { createChannelPluginBase } from "openclaw/plugin-sdk/core";
 import {
   buildChannelConfigSchema,
   DiscordConfigSchema,
@@ -59,10 +58,12 @@ export function createDiscordPluginBase(params: {
   | "config"
   | "setup"
 > {
-  return createChannelPluginBase({
+  return {
     id: DISCORD_CHANNEL,
+    meta: {
+      ...getChatChannelMeta(DISCORD_CHANNEL),
+    },
     setupWizard: discordSetupWizard,
-    meta: { ...getChatChannelMeta(DISCORD_CHANNEL) },
     capabilities: {
       chatTypes: ["direct", "channel", "thread"],
       polls: true,
@@ -89,16 +90,5 @@ export function createDiscordPluginBase(params: {
       ...discordConfigAccessors,
     },
     setup: params.setup,
-  }) as Pick<
-    ChannelPlugin<ResolvedDiscordAccount>,
-    | "id"
-    | "meta"
-    | "setupWizard"
-    | "capabilities"
-    | "streaming"
-    | "reload"
-    | "configSchema"
-    | "config"
-    | "setup"
-  >;
+  };
 }

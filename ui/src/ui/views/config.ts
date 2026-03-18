@@ -56,7 +56,6 @@ export type ConfigProps = {
   includeSections?: string[];
   excludeSections?: string[];
   includeVirtualSections?: boolean;
-  onRequestUpdate?: () => void;
 };
 
 // SVG Icons for sidebar (Lucide-style)
@@ -673,7 +672,6 @@ export function renderConfig(props: ConfigProps) {
   const formUnsafe = analysis.schema ? analysis.unsupportedPaths.length > 0 : false;
   const formMode = showModeToggle ? props.formMode : "form";
   const envSensitiveVisible = cvs.envRevealed;
-  const requestUpdate = props.onRequestUpdate ?? (() => props.onRawChange(props.raw));
 
   // Build categorised nav from schema - only include sections that exist in the schema
   const schemaProps = analysis.schema?.properties ?? {};
@@ -907,7 +905,7 @@ export function renderConfig(props: ConfigProps) {
                   class="btn btn--sm"
                   @click=${() => {
                     cvs.validityDismissed = true;
-                    requestUpdate();
+                    props.onRawChange(props.raw);
                   }}
                 >Don't remind again</button>
               </div>
@@ -984,7 +982,7 @@ export function renderConfig(props: ConfigProps) {
                         title=${envSensitiveVisible ? "Hide env values" : "Reveal env values"}
                         @click=${() => {
                           cvs.envRevealed = !cvs.envRevealed;
-                          requestUpdate();
+                          props.onRawChange(props.raw);
                         }}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
@@ -1033,7 +1031,7 @@ export function renderConfig(props: ConfigProps) {
                         isSensitivePathRevealed,
                         onToggleSensitivePath: (path) => {
                           toggleSensitivePathReveal(path);
-                          requestUpdate();
+                          props.onRawChange(props.raw);
                         },
                       })
                 }
@@ -1073,7 +1071,7 @@ export function renderConfig(props: ConfigProps) {
                                 aria-pressed=${!blurred}
                                 @click=${() => {
                                   cvs.rawRevealed = !cvs.rawRevealed;
-                                  requestUpdate();
+                                  props.onRawChange(props.raw);
                                 }}
                               >
                                 ${blurred ? icons.eyeOff : icons.eye}

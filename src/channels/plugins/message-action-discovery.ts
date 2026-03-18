@@ -60,7 +60,7 @@ export function createMessageActionDiscoveryContext(
 
 function logMessageActionError(params: {
   pluginId: string;
-  operation: "describeMessageTool";
+  operation: "describeMessageTool" | "getCapabilities" | "getToolSchema" | "listActions";
   error: unknown;
 }) {
   const message = params.error instanceof Error ? params.error.message : String(params.error);
@@ -75,6 +75,24 @@ function logMessageActionError(params: {
   );
 }
 
+function runListActionsSafely(params: {
+  pluginId: string;
+  context: ChannelMessageActionDiscoveryContext;
+  listActions: NonNullable<ChannelActions["listActions"]>;
+}): ChannelMessageActionName[] {
+  try {
+    const listed = params.listActions(params.context);
+    return Array.isArray(listed) ? listed : [];
+  } catch (error) {
+    logMessageActionError({
+      pluginId: params.pluginId,
+      operation: "listActions",
+      error,
+    });
+    return [];
+  }
+}
+
 function describeMessageToolSafely(params: {
   pluginId: string;
   context: ChannelMessageActionDiscoveryContext;
@@ -86,6 +104,44 @@ function describeMessageToolSafely(params: {
     logMessageActionError({
       pluginId: params.pluginId,
       operation: "describeMessageTool",
+      error,
+    });
+    return null;
+  }
+}
+
+function listCapabilitiesSafely(params: {
+  pluginId: string;
+  actions: ChannelActions;
+  context: ChannelMessageActionDiscoveryContext;
+}): readonly ChannelMessageCapability[] {
+  try {
+    return params.actions.getCapabilities?.(params.context) ?? [];
+  } catch (error) {
+    logMessageActionError({
+      pluginId: params.pluginId,
+      operation: "getCapabilities",
+      error,
+    });
+    return [];
+  }
+}
+
+function runGetToolSchemaSafely(params: {
+  pluginId: string;
+  context: ChannelMessageActionDiscoveryContext;
+  getToolSchema: NonNullable<ChannelActions["getToolSchema"]>;
+}):
+  | ChannelMessageToolSchemaContribution
+  | ChannelMessageToolSchemaContribution[]
+  | null
+  | undefined {
+  try {
+    return params.getToolSchema(params.context);
+  } catch (error) {
+    logMessageActionError({
+      pluginId: params.pluginId,
+      operation: "getToolSchema",
       error,
     });
     return null;
@@ -128,21 +184,52 @@ export function resolveMessageActionDiscoveryForPlugin(params: {
     };
   }
 
-  const described = describeMessageToolSafely({
-    pluginId: params.pluginId,
-    context: params.context,
-    describeMessageTool: adapter.describeMessageTool,
-  });
+  if (adapter.describeMessageTool) {
+    const described = describeMessageToolSafely({
+      pluginId: params.pluginId,
+      context: params.context,
+      describeMessageTool: adapter.describeMessageTool,
+    });
+    return {
+      actions:
+        params.includeActions && Array.isArray(described?.actions) ? [...described.actions] : [],
+      capabilities:
+        params.includeCapabilities && Array.isArray(described?.capabilities)
+          ? described.capabilities
+          : [],
+      schemaContributions: params.includeSchema
+        ? normalizeToolSchemaContributions(described?.schema)
+        : [],
+    };
+  }
+
   return {
     actions:
-      params.includeActions && Array.isArray(described?.actions) ? [...described.actions] : [],
-    capabilities:
-      params.includeCapabilities && Array.isArray(described?.capabilities)
-        ? described.capabilities
+      params.includeActions && adapter.listActions
+        ? runListActionsSafely({
+            pluginId: params.pluginId,
+            context: params.context,
+            listActions: adapter.listActions,
+          })
         : [],
-    schemaContributions: params.includeSchema
-      ? normalizeToolSchemaContributions(described?.schema)
-      : [],
+    capabilities:
+      params.includeCapabilities && adapter.getCapabilities
+        ? listCapabilitiesSafely({
+            pluginId: params.pluginId,
+            actions: adapter,
+            context: params.context,
+          })
+        : [],
+    schemaContributions:
+      params.includeSchema && adapter.getToolSchema
+        ? normalizeToolSchemaContributions(
+            runGetToolSchemaSafely({
+              pluginId: params.pluginId,
+              context: params.context,
+              getToolSchema: adapter.getToolSchema,
+            }),
+          )
+        : [],
   };
 }
 

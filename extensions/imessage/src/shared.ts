@@ -2,7 +2,6 @@ import {
   buildAccountScopedDmSecurityPolicy,
   collectAllowlistProviderRestrictSendersWarnings,
 } from "openclaw/plugin-sdk/channel-policy";
-import { createChannelPluginBase } from "openclaw/plugin-sdk/core";
 import {
   buildChannelConfigSchema,
   DEFAULT_ACCOUNT_ID,
@@ -48,7 +47,7 @@ export function createIMessagePluginBase(params: {
   | "security"
   | "setup"
 > {
-  return createChannelPluginBase({
+  return {
     id: IMESSAGE_CHANNEL,
     meta: {
       ...getChatChannelMeta(IMESSAGE_CHANNEL),
@@ -116,16 +115,5 @@ export function createIMessagePluginBase(params: {
         }),
     },
     setup: params.setup,
-  }) as Pick<
-    ChannelPlugin<ResolvedIMessageAccount>,
-    | "id"
-    | "meta"
-    | "setupWizard"
-    | "capabilities"
-    | "reload"
-    | "configSchema"
-    | "config"
-    | "security"
-    | "setup"
-  >;
+  };
 }

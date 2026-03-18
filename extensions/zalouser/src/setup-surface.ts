@@ -1,6 +1,4 @@
 import {
-  createTopLevelChannelDmPolicy,
-  createTopLevelChannelDmPolicySetter,
   DEFAULT_ACCOUNT_ID,
   formatCliCommand,
   formatDocsLink,
@@ -8,6 +6,7 @@ import {
   mergeAllowFromEntries,
   normalizeAccountId,
   patchScopedAccountConfig,
+  setTopLevelChannelDmPolicyWithAllowFrom,
   type ChannelSetupDmPolicy,
   type ChannelSetupWizard,
   type DmPolicy,
@@ -30,9 +29,6 @@ import {
 } from "./zalo-js.js";
 
 const channel = "zalouser" as const;
-const setZalouserDmPolicy = createTopLevelChannelDmPolicySetter({
-  channel,
-});
 const ZALOUSER_ALLOW_FROM_PLACEHOLDER = "Alice, 123456789, or leave empty to configure later";
 const ZALOUSER_GROUPS_PLACEHOLDER = "Family, Work, 123456789, or leave empty for now";
 const ZALOUSER_DM_ACCESS_TITLE = "Zalo Personal DM access";
@@ -58,6 +54,14 @@ function setZalouserAccountScopedConfig(
     accountId,
     patch: defaultPatch,
     accountPatch,
+  }) as OpenClawConfig;
+}
+
+function setZalouserDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy): OpenClawConfig {
+  return setTopLevelChannelDmPolicyWithAllowFrom({
+    cfg,
+    channel,
+    dmPolicy,
   }) as OpenClawConfig;
 }
 
@@ -189,12 +193,13 @@ async function promptZalouserAllowFrom(params: {
   }
 }
 
-const zalouserDmPolicy: ChannelSetupDmPolicy = createTopLevelChannelDmPolicy({
+const zalouserDmPolicy: ChannelSetupDmPolicy = {
   label: "Zalo Personal",
   channel,
   policyKey: "channels.zalouser.dmPolicy",
   allowFromKey: "channels.zalouser.allowFrom",
   getCurrent: (cfg) => (cfg.channels?.zalouser?.dmPolicy ?? "pairing") as DmPolicy,
+  setPolicy: (cfg, policy) => setZalouserDmPolicy(cfg as OpenClawConfig, policy),
   promptAllowFrom: async ({ cfg, prompter, accountId }) => {
     const id =
       accountId && normalizeAccountId(accountId)
@@ -206,7 +211,7 @@ const zalouserDmPolicy: ChannelSetupDmPolicy = createTopLevelChannelDmPolicy({
       accountId: id,
     });
   },
-});
+};
 
 async function promptZalouserQuickstartDmPolicy(params: {
   cfg: OpenClawConfig;

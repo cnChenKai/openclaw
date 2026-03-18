@@ -29,7 +29,7 @@ describe("channel tools", () => {
         resolveAccount: () => ({}),
       },
       actions: {
-        describeMessageTool: () => {
+        listActions: () => {
           throw new Error("boom");
         },
       },
@@ -70,7 +70,7 @@ describe("channel tools", () => {
         resolveAccount: () => ({}),
       },
       actions: {
-        describeMessageTool: () => ({ actions: [] }),
+        listActions: () => [],
       },
       outbound: {
         deliveryMode: "gateway",
@@ -102,7 +102,7 @@ describe("channel tools", () => {
         resolveAccount: () => ({}),
       },
       actions: {
-        describeMessageTool: () => ({ actions: ["react"] }),
+        listActions: () => ["react"],
       },
     };
 
@@ -112,7 +112,10 @@ describe("channel tools", () => {
     expect(listChannelSupportedActions({ cfg, channel: "tg" })).toEqual(["react"]);
   });
 
-  it("uses unified message tool discovery", () => {
+  it("uses unified message tool discovery when available", () => {
+    const listActions = vi.fn(() => {
+      throw new Error("legacy listActions should not run");
+    });
     const plugin: ChannelPlugin = {
       id: "telegram",
       meta: {
@@ -131,6 +134,7 @@ describe("channel tools", () => {
         describeMessageTool: () => ({
           actions: ["react"],
         }),
+        listActions,
       },
     };
 
@@ -138,5 +142,6 @@ describe("channel tools", () => {
 
     const cfg = {} as OpenClawConfig;
     expect(listChannelSupportedActions({ cfg, channel: "telegram" })).toEqual(["react"]);
+    expect(listActions).not.toHaveBeenCalled();
   });
 });

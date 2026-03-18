@@ -3,7 +3,6 @@ import {
   createScopedAccountConfigAccessors,
   createScopedChannelConfigBase,
 } from "openclaw/plugin-sdk/channel-config-helpers";
-import { createChannelPluginBase } from "openclaw/plugin-sdk/core";
 import {
   buildChannelConfigSchema,
   getChatChannelMeta,
@@ -80,7 +79,7 @@ export function createTelegramPluginBase(params: {
   ChannelPlugin<ResolvedTelegramAccount>,
   "id" | "meta" | "setupWizard" | "capabilities" | "reload" | "configSchema" | "config" | "setup"
 > {
-  return createChannelPluginBase({
+  return {
     id: TELEGRAM_CHANNEL,
     meta: {
       ...getChatChannelMeta(TELEGRAM_CHANNEL),
@@ -134,8 +133,5 @@ export function createTelegramPluginBase(params: {
       ...telegramConfigAccessors,
     },
     setup: params.setup,
-  }) as Pick<
-    ChannelPlugin<ResolvedTelegramAccount>,
-    "id" | "meta" | "setupWizard" | "capabilities" | "reload" | "configSchema" | "config" | "setup"
-  >;
+  };
 }

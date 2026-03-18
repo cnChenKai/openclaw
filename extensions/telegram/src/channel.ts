@@ -20,6 +20,8 @@ import {
   PAIRING_APPROVED_MESSAGE,
   projectCredentialSnapshotFields,
   resolveConfiguredFromCredentialStatuses,
+  resolveTelegramGroupRequireMention,
+  resolveTelegramGroupToolPolicy,
   type ChannelPlugin,
   type ChannelMessageActionAdapter,
   type OpenClawConfig,
@@ -36,10 +38,6 @@ import {
   isTelegramExecApprovalClientEnabled,
   resolveTelegramExecApprovalTarget,
 } from "./exec-approvals.js";
-import {
-  resolveTelegramGroupRequireMention,
-  resolveTelegramGroupToolPolicy,
-} from "./group-policy.js";
 import { monitorTelegramProvider } from "./monitor.js";
 import { looksLikeTelegramTargetId, normalizeTelegramMessagingTarget } from "./normalize.js";
 import { sendTelegramPayloadMessages } from "./outbound-adapter.js";
@@ -252,6 +250,12 @@ function hasTelegramExecApprovalDmRoute(cfg: OpenClawConfig): boolean {
 const telegramMessageActions: ChannelMessageActionAdapter = {
   describeMessageTool: (ctx) =>
     getTelegramRuntime().channel.telegram.messageActions?.describeMessageTool?.(ctx) ?? null,
+  listActions: (ctx) =>
+    getTelegramRuntime().channel.telegram.messageActions?.listActions?.(ctx) ?? [],
+  getCapabilities: (ctx) =>
+    getTelegramRuntime().channel.telegram.messageActions?.getCapabilities?.(ctx) ?? [],
+  getToolSchema: (ctx) =>
+    getTelegramRuntime().channel.telegram.messageActions?.getToolSchema?.(ctx) ?? null,
   extractToolSend: (ctx) =>
     getTelegramRuntime().channel.telegram.messageActions?.extractToolSend?.(ctx) ?? null,
   handleAction: async (ctx) => {

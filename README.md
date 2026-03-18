@@ -563,5 +563,5 @@ Thanks to all clawtributors:
 - **Android Debug APK**: We use GitHub Actions to build a debug APK.
   - To trigger: Go to the "Actions" tab in GitHub, select the "Android Debug Build" workflow, and click "Run workflow" or push changes to `apps/android/**`.
   - To download:
-    - The latest APK is always available in the [Android Debug APK (Latest) Release](https://github.com/openclaw/openclaw/releases/tag/android-debug-latest).
+    - The latest APK is always available in the [Android Debug APK (Latest) Release](../../releases/tag/android-debug-latest).
     - Alternatively, after a successful run, download the `openclaw-android-debug-apk` artifact from the bottom of the workflow run summary page.

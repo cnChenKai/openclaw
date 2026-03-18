@@ -21,14 +21,15 @@ function listEnabledAccounts(cfg: OpenClawConfig) {
 }
 
 export const zaloMessageActions: ChannelMessageActionAdapter = {
-  describeMessageTool: ({ cfg }) => {
+  listActions: ({ cfg }) => {
     const accounts = listEnabledAccounts(cfg);
     if (accounts.length === 0) {
-      return null;
+      return [];
     }
     const actions = new Set<ChannelMessageActionName>(["send"]);
-    return { actions: Array.from(actions), capabilities: [] };
+    return Array.from(actions);
   },
+  getCapabilities: () => [],
   extractToolSend: ({ args }) => extractToolSend(args, "sendMessage"),
   handleAction: async ({ action, params, cfg, accountId }) => {
     if (action === "send") {

@@ -129,7 +129,7 @@ describe("runMessageAction media behavior", () => {
         isConfigured: () => true,
       },
       actions: {
-        describeMessageTool: () => ({ actions: ["sendAttachment", "setGroupIcon"] }),
+        listActions: () => ["sendAttachment", "setGroupIcon"],
         supportsAction: ({ action }) => action === "sendAttachment" || action === "setGroupIcon",
         handleAction: async ({ params }) =>
           jsonResult({
