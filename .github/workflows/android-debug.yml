@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: apps/android
@@ -40,3 +42,17 @@ jobs:
         with:
           name: openclaw-android-debug-apk
           path: apps/android/app/build/outputs/apk/debug/*.apk
+
+      - name: Update Prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK_PATH=$(ls app/build/outputs/apk/debug/*.apk | head -n 1)
+          if gh release view android-debug-latest >/dev/null 2>&1; then
+            gh release upload android-debug-latest "$APK_PATH" --clobber
+          else
+            gh release create android-debug-latest "$APK_PATH" \
+              --title "Android Debug APK (Latest)" \
+              --prerelease \
+              --notes "Rolling prerelease for Android Debug APK."
+          fi
