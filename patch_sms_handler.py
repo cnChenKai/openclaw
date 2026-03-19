@@ -1,4 +1,9 @@
-package ai.openclaw.app.node
+import sys
+
+def main():
+    file_path = "apps/android/app/src/main/java/ai/openclaw/app/node/SmsHandler.kt"
+    with open(file_path, "w") as f:
+        f.write("""package ai.openclaw.app.node
 
 import ai.openclaw.app.gateway.GatewaySession
 
@@ -29,3 +34,7 @@ class SmsHandler(
     }
   }
 }
+""")
+
+if __name__ == "__main__":
+    main()
