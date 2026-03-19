@@ -1,0 +1,21 @@
+<<<<<<< SEARCH
+const SMS_DANGEROUS_COMMANDS = ["sms.send"];
+
+// iOS nodes don't implement system.run/which, but they do support notifications.
+=======
+const SMS_DANGEROUS_COMMANDS = ["sms.send", "sms.read"];
+
+// iOS nodes don't implement system.run/which, but they do support notifications.
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+    ...MOTION_COMMANDS,
+    "sms.send",
+  ],
+  macos: [
+=======
+    ...MOTION_COMMANDS,
+    "sms.send",
+    "sms.read",
+  ],
+  macos: [
+>>>>>>> REPLACE

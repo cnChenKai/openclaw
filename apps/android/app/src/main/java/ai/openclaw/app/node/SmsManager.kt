@@ -11,6 +11,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonArray
+import android.provider.Telephony
 import ai.openclaw.app.PermissionRequester
 
 /**
@@ -21,6 +23,12 @@ class SmsManager(private val context: Context) {
 
     private val json = JsonConfig
     @Volatile private var permissionRequester: PermissionRequester? = null
+
+    data class ReadResult(
+        val ok: Boolean,
+        val error: String? = null,
+        val payloadJson: String,
+    )
 
     data class SendResult(
         val ok: Boolean,
@@ -114,6 +122,13 @@ class SmsManager(private val context: Context) {
         }
     }
 
+    fun hasReadSmsPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_SMS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun hasSmsPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -201,11 +216,99 @@ class SmsManager(private val context: Context) {
         }
     }
 
+    private suspend fun ensureReadSmsPermission(): Boolean {
+        if (hasReadSmsPermission()) return true
+        val requester = permissionRequester ?: return false
+        val results = requester.requestIfMissing(listOf(Manifest.permission.READ_SMS))
+        return results[Manifest.permission.READ_SMS] == true
+    }
+
     private suspend fun ensureSmsPermission(): Boolean {
         if (hasSmsPermission()) return true
         val requester = permissionRequester ?: return false
         val results = requester.requestIfMissing(listOf(Manifest.permission.SEND_SMS))
         return results[Manifest.permission.SEND_SMS] == true
+    }
+
+    /**
+     * Read SMS messages.
+     */
+    suspend fun read(paramsJson: String?): ReadResult {
+        if (!hasTelephonyFeature()) {
+            return readErrorResult(error = "SMS_UNAVAILABLE: telephony not available")
+        }
+
+        if (!ensureReadSmsPermission()) {
+            return readErrorResult(error = "SMS_PERMISSION_REQUIRED: grant READ_SMS permission")
+        }
+
+        var limit = 20
+        if (!paramsJson.isNullOrBlank()) {
+            try {
+                val obj = json.parseToJsonElement(paramsJson).jsonObject
+                val limitPrimitive = obj["limit"] as? JsonPrimitive
+                limitPrimitive?.content?.toIntOrNull()?.let {
+                    if (it > 0) limit = it
+                }
+            } catch (_: Throwable) {}
+        }
+
+        return try {
+            val messages = mutableListOf<JsonObject>()
+            val uri = Telephony.Sms.CONTENT_URI
+            val projection = arrayOf(
+                Telephony.Sms._ID,
+                Telephony.Sms.ADDRESS,
+                Telephony.Sms.BODY,
+                Telephony.Sms.DATE,
+                Telephony.Sms.TYPE
+            )
+
+            context.contentResolver.query(
+                uri,
+                projection,
+                null,
+                null,
+                "${Telephony.Sms.DATE} DESC LIMIT $limit"
+            )?.use { cursor ->
+                val idIdx = cursor.getColumnIndexOrThrow(Telephony.Sms._ID)
+                val addrIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS)
+                val bodyIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.BODY)
+                val dateIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.DATE)
+                val typeIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.TYPE)
+
+                while (cursor.moveToNext()) {
+                    val msgObj = JsonObject(mapOf(
+                        "id" to JsonPrimitive(cursor.getString(idIdx)),
+                        "address" to JsonPrimitive(cursor.getString(addrIdx)),
+                        "body" to JsonPrimitive(cursor.getString(bodyIdx)),
+                        "date" to JsonPrimitive(cursor.getLong(dateIdx)),
+                        "type" to JsonPrimitive(cursor.getInt(typeIdx))
+                    ))
+                    messages.add(msgObj)
+                }
+            }
+
+            val payloadObj = JsonObject(mapOf(
+                "ok" to JsonPrimitive(true),
+                "messages" to JsonArray(messages)
+            ))
+            val payloadStr = json.encodeToString(JsonObject.serializer(), payloadObj)
+            ReadResult(ok = true, error = null, payloadJson = payloadStr)
+        } catch (e: SecurityException) {
+            readErrorResult(error = "SMS_PERMISSION_REQUIRED: ${e.message}")
+        } catch (e: Throwable) {
+            readErrorResult(error = "SMS_READ_FAILED: ${e.message ?: "unknown error"}")
+        }
+    }
+
+    private fun readErrorResult(error: String): ReadResult {
+        val payloadObj = JsonObject(mapOf(
+            "ok" to JsonPrimitive(false),
+            "error" to JsonPrimitive(error)
+        ))
+        val payloadStr = json.encodeToString(JsonObject.serializer(), payloadObj)
+        return ReadResult(ok = false, error = error, payloadJson = payloadStr)
     }
 
     private fun okResult(to: String, message: String): SendResult {
