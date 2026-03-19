@@ -74,7 +74,7 @@ class CameraHandler(
         try {
           camLog("calling camera.snap()")
           val r = camera.snap(paramsJson)
-          camLog("success, payload size=${r.payloadJson.length}")
+          camLog("success, file size=${r.sizeBytes}")
           r
         } catch (err: Throwable) {
           camLog("inner error: ${err::class.java.simpleName}: ${err.message}")
@@ -85,7 +85,18 @@ class CameraHandler(
         }
       camLog("returning result")
       showCameraHud("Photo captured", CameraHudKind.Success, 1600)
-      return GatewaySession.InvokeResult.ok(res.payloadJson)
+
+      val payload = buildJsonObject {
+        put("type", JsonPrimitive("file"))
+        put("mimeType", JsonPrimitive(res.mimeType))
+        put("filename", JsonPrimitive(res.file.name))
+        put("sizeBytes", JsonPrimitive(res.sizeBytes))
+        put("path", JsonPrimitive(res.file.absolutePath))
+        put("width", JsonPrimitive(res.width))
+        put("height", JsonPrimitive(res.height))
+      }.toString()
+
+      return GatewaySession.InvokeResult.ok(payload)
     } catch (err: Throwable) {
       camLog("outer error: ${err::class.java.simpleName}: ${err.message}")
       camLog("stack: ${err.stackTraceToString().take(2000)}")

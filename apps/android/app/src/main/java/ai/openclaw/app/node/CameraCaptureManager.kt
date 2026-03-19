@@ -44,6 +44,7 @@ import kotlin.coroutines.resumeWithException
 class CameraCaptureManager(private val context: Context) {
   data class Payload(val payloadJson: String)
   data class FilePayload(val file: File, val durationMs: Long, val hasAudio: Boolean)
+  data class SnapFilePayload(val file: File, val width: Int, val height: Int, val mimeType: String, val sizeBytes: Long)
   data class CameraDeviceInfo(
     val id: String,
     val name: String,
@@ -94,7 +95,7 @@ class CameraCaptureManager(private val context: Context) {
     }
   }
 
-  suspend fun snap(paramsJson: String?): Payload =
+  suspend fun snap(paramsJson: String?): SnapFilePayload =
     withContext(Dispatchers.Main) {
       ensureCameraPermission()
       val owner = lifecycleOwner ?: throw IllegalStateException("UNAVAILABLE: camera not ready")
@@ -153,9 +154,14 @@ class CameraCaptureManager(private val context: Context) {
             out.toByteArray()
           },
         )
-      val base64 = Base64.encodeToString(result.bytes, Base64.NO_WRAP)
-      Payload(
-        """{"format":"jpg","base64":"$base64","width":${result.width},"height":${result.height}}""",
+      val outFile = File.createTempFile("camera-snap-", ".jpg", context.cacheDir)
+      outFile.writeBytes(result.bytes)
+      SnapFilePayload(
+        file = outFile,
+        width = result.width,
+        height = result.height,
+        mimeType = "image/jpeg",
+        sizeBytes = result.bytes.size.toLong()
       )
     }
 
