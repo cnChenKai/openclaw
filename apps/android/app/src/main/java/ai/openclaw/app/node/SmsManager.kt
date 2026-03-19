@@ -137,7 +137,7 @@ class SmsManager(private val context: Context) {
     }
 
     fun canSendSms(): Boolean {
-        return hasSmsPermission() && hasTelephonyFeature()
+        return hasTelephonyFeature()
     }
 
     fun hasTelephonyFeature(): Boolean {
